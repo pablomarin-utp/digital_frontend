@@ -5,7 +5,7 @@ import type {
   TrainResponse,
 } from '../types/api';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000/api/v1';
+const API_BASE_URL = 'https://sternum-untaxed-vigorous.ngrok-free.dev/api/v1';
 
 async function postFormData<T>(endpoint: string, formData: FormData): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {

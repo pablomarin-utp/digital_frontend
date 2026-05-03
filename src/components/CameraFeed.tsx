@@ -5,7 +5,7 @@ interface CameraFeedProps {
   isStreaming: boolean;
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000/api/v1';
+const API_BASE_URL = 'https://sternum-untaxed-vigorous.ngrok-free.dev/api/v1';
 const USE_ESP32_CAM = import.meta.env.VITE_USE_ESP32_CAM === 'true';
 const STREAM_URL = `${API_BASE_URL}/esp/cam/stream`;
 const RECOGNITION_INTERVAL_MS = 2000;
@@ -88,6 +88,7 @@ export function CameraFeed({ onFrameReady, isStreaming }: CameraFeedProps) {
         <img
           ref={imgRef}
           src={STREAM_URL}
+          crossOrigin="anonymous"
           alt="ESP32-CAM Stream"
           className="video"
           style={{ width: '100%', maxWidth: '640px', aspectRatio: '4/3' }}
