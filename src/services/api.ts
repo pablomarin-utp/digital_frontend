@@ -1,5 +1,6 @@
 import type {
   AddPersonResponse,
+  EnrollResponse,
   RecognitionResponse,
   StatusResponse,
   TrainResponse,
@@ -54,6 +55,13 @@ export const faceApi = {
 
   train: async (): Promise<TrainResponse> => {
     return postJson<TrainResponse>('/train');
+  },
+
+  enrollCapture: async (name: string, filePath: string): Promise<EnrollResponse> => {
+    const formData = new FormData();
+    formData.append('name', name);
+    formData.append('file_path', filePath);
+    return postFormData<EnrollResponse>('/enroll_capture', formData);
   },
 
   status: async (): Promise<StatusResponse> => {

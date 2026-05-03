@@ -31,6 +31,14 @@ export interface UiResult {
   confidence: number;
   message: string;
   timestamp: number;
+  door?: boolean;
+}
+
+export interface EnrollResponse {
+  success: boolean;
+  message: string;
+  total_people: number;
+  total_samples: number;
 }
 
 export interface DevicesResponse {

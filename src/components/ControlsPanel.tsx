@@ -9,7 +9,10 @@ interface ControlsPanelProps {
   toggleStreaming: () => void;
   onToggleLed: () => void;
   ledState: boolean;
+  onToggleFan: () => void;
+  fanState: boolean;
   onRefreshDevices?: () => void;
+  onOpenEnrollModal?: () => void;
 }
 
 export function ControlsPanel({
@@ -23,7 +26,10 @@ export function ControlsPanel({
   toggleStreaming,
   onToggleLed,
   ledState,
+  onToggleFan,
+  fanState,
   onRefreshDevices,
+  onOpenEnrollModal,
 }: ControlsPanelProps) {
   return (
     <section className="card">
@@ -46,7 +52,10 @@ export function ControlsPanel({
           </button>
         )}
         <button onClick={onToggleLed} disabled={isLoading}>
-          {ledState ? 'Apagar LED 🔴' : 'Prender LED 🟢'}
+          {ledState ? '💡 Apagar bombillo' : '💡 Encender bombillo'}
+        </button>
+        <button onClick={onToggleFan} disabled={isLoading}>
+          {fanState ? '🌀 Apagar ventilador' : '🌀 Encender ventilador'}
         </button>
         <button onClick={toggleStreaming} disabled={isLoading}>
           {isStreaming ? 'Detener tiempo real' : 'Iniciar tiempo real'}
@@ -54,9 +63,15 @@ export function ControlsPanel({
         <button onClick={onRecognize} disabled={isLoading}>
           Reconocer rostro
         </button>
-        <button onClick={onAddPerson} disabled={isLoading || !personName.trim()}>
-          Añadir nueva persona
-        </button>
+        {onOpenEnrollModal ? (
+          <button onClick={onOpenEnrollModal} disabled={isLoading}>
+            📷 Añadir persona
+          </button>
+        ) : (
+          <button onClick={onAddPerson} disabled={isLoading || !personName.trim()}>
+            Añadir nueva persona
+          </button>
+        )}
         <button onClick={onTrain} disabled={isLoading}>
           Reentrenar clasificador
         </button>
