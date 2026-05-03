@@ -26,8 +26,8 @@ function App() {
     const interval = setInterval(async () => {
       try {
         const [motionRes, devicesRes] = await Promise.all([
-          fetch('/api/v1/esp/motion').catch(() => null),
-          fetch('/api/v1/esp/devices').catch(() => null),
+          fetch(`${API_BASE_URL}/esp/motion`).catch(() => null),
+          fetch(`${API_BASE_URL}/esp/devices`).catch(() => null),
         ]);
 
         if (motionRes && motionRes.ok) {
@@ -174,7 +174,7 @@ function App() {
 
   const handleRefreshDevices = useCallback(async () => {
     try {
-      const response = await fetch('/api/v1/esp/devices');
+      const response = await fetch(`${API_BASE_URL}/esp/devices`);
       const text = await response.text();
       console.log('Response text:', text);
       if (text.startsWith('<')) {
