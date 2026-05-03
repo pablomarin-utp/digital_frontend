@@ -7,9 +7,12 @@ import type {
 
 const API_BASE_URL = 'https://sternum-untaxed-vigorous.ngrok-free.dev/api/v1';
 
+export const BACKEND_HEADERS = { 'ngrok-skip-browser-warning': 'true' };
+
 async function postFormData<T>(endpoint: string, formData: FormData): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     method: 'POST',
+    headers: BACKEND_HEADERS,
     body: formData,
   });
 
@@ -24,6 +27,7 @@ async function postFormData<T>(endpoint: string, formData: FormData): Promise<T>
 async function postJson<T>(endpoint: string): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     method: 'POST',
+    headers: BACKEND_HEADERS,
   });
 
   if (!response.ok) {
@@ -53,7 +57,7 @@ export const faceApi = {
   },
 
   status: async (): Promise<StatusResponse> => {
-    const response = await fetch(`${API_BASE_URL}/status`);
+    const response = await fetch(`${API_BASE_URL}/status`, { headers: BACKEND_HEADERS });
 
     if (!response.ok) {
       const detail = await response.text();

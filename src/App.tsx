@@ -3,7 +3,7 @@ import { CameraFeed } from './components/CameraFeed';
 import { ControlsPanel } from './components/ControlsPanel';
 import { ResultsPanel } from './components/ResultsPanel';
 import { UploadImage } from './components/UploadImage';
-import { faceApi } from './services/api';
+import { faceApi, BACKEND_HEADERS } from './services/api';
 import type { UiResult, DevicesResponse } from './types/api';
 
 const API_BASE_URL = 'https://sternum-untaxed-vigorous.ngrok-free.dev/api/v1';
@@ -26,8 +26,8 @@ function App() {
     const interval = setInterval(async () => {
       try {
         const [motionRes, devicesRes] = await Promise.all([
-          fetch(`${API_BASE_URL}/esp/motion`).catch(() => null),
-          fetch(`${API_BASE_URL}/esp/devices`).catch(() => null),
+          fetch(`${API_BASE_URL}/esp/motion`, { headers: BACKEND_HEADERS }).catch(() => null),
+          fetch(`${API_BASE_URL}/esp/devices`, { headers: BACKEND_HEADERS }).catch(() => null),
         ]);
 
         if (motionRes && motionRes.ok) {
@@ -163,6 +163,7 @@ function App() {
     try {
       const response = await fetch(`${API_BASE_URL}/esp/led`, {
         method: 'POST',
+        headers: BACKEND_HEADERS,
       });
       const data = await response.json();
       setLedState(data.led);
@@ -174,7 +175,7 @@ function App() {
 
   const handleRefreshDevices = useCallback(async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/esp/devices`);
+      const response = await fetch(`${API_BASE_URL}/esp/devices`, { headers: BACKEND_HEADERS });
       const text = await response.text();
       console.log('Response text:', text);
       if (text.startsWith('<')) {
