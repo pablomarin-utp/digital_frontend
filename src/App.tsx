@@ -1,10 +1,12 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { CameraFeed } from './components/CameraFeed';
 import { ControlsPanel } from './components/ControlsPanel';
 import { ResultsPanel } from './components/ResultsPanel';
 import { UploadImage } from './components/UploadImage';
 import { faceApi } from './services/api';
-import type { UiResult } from './types/api';
+import type { UiResult, DevicesResponse } from './types/api';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000/api/v1';
 
 function App() {
   const [isStreaming, setIsStreaming] = useState(false);
@@ -14,6 +16,49 @@ function App() {
   const [currentResult, setCurrentResult] = useState<UiResult | null>(null);
   const [history, setHistory] = useState<UiResult[]>([]);
   const [systemMessage, setSystemMessage] = useState('Conecta cámara o sube una imagen para comenzar.');
+  const [ledState, setLedState] = useState(false);
+  const [motionDetected, setMotionDetected] = useState(false);
+  const [sensorDistance, setSensorDistance] = useState<number | null>(null);
+  const [devices, setDevices] = useState<DevicesResponse>({ bridge: null, cam: null });
+  const prevMotionRef = useRef(false);
+
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        const [motionRes, devicesRes] = await Promise.all([
+          fetch('/api/v1/esp/motion').catch(() => null),
+          fetch('/api/v1/esp/devices').catch(() => null),
+        ]);
+
+        if (motionRes && motionRes.ok) {
+          const data = await motionRes.json();
+          const detected: boolean = data.motion === true;
+          const dist: number | null = typeof data.distance === 'number' && data.distance >= 0 ? data.distance : null;
+          setMotionDetected(detected);
+          setSensorDistance(dist);
+          if (detected && !prevMotionRef.current) {
+            setSystemMessage('Objeto detectado — cámara activada.');
+            setIsStreaming(true);
+          } else if (!detected && prevMotionRef.current) {
+            setSystemMessage('Sin objeto — cámara desactivada.');
+            setIsStreaming(false);
+          }
+          prevMotionRef.current = detected;
+        }
+
+        if (devicesRes && devicesRes.ok) {
+          const text = await devicesRes.text();
+          if (!text.startsWith('<')) {
+            const data: DevicesResponse = JSON.parse(text);
+            setDevices(data);
+          }
+        }
+      } catch {
+        // Silencioso si el backend no está disponible
+      }
+    }, 2000);
+    return () => clearInterval(interval);
+  }, []);
 
   const pushResult = useCallback((result: UiResult) => {
     setCurrentResult(result);
@@ -114,6 +159,37 @@ function App() {
     setIsStreaming((prev) => !prev);
   }, []);
 
+  const handleToggleLed = useCallback(async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/esp/led`, {
+        method: 'POST',
+      });
+      const data = await response.json();
+      setLedState(data.led);
+      setSystemMessage(data.led ? 'LED encendido' : 'LED apagado');
+    } catch {
+      setSystemMessage('Error al controlar LED');
+    }
+  }, []);
+
+  const handleRefreshDevices = useCallback(async () => {
+    try {
+      const response = await fetch('/api/v1/esp/devices');
+      const text = await response.text();
+      console.log('Response text:', text);
+      if (text.startsWith('<')) {
+        setSystemMessage('Proxy error - revisa el servidor Vite');
+      } else {
+        const data = JSON.parse(text);
+        setDevices(data);
+        setSystemMessage(`Bridge: ${data.bridge || '—'}, CAM: ${data.cam || '—'}`);
+      }
+    } catch (e) {
+      console.error('Error fetching devices:', e);
+      setSystemMessage('Error al refrescar dispositivos');
+    }
+  }, []);
+
   return (
     <main className="appLayout">
       <header>
@@ -121,7 +197,14 @@ function App() {
       </header>
 
       <div className="grid">
-        <CameraFeed onFrameReady={handleFrameReady} isStreaming={isStreaming} />
+        {motionDetected ? (
+          <CameraFeed onFrameReady={handleFrameReady} isStreaming={isStreaming} />
+        ) : (
+          <section className="card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '240px', color: '#555', flexDirection: 'column', gap: '10px' }}>
+            <span style={{ fontSize: '2.5rem' }}>📷</span>
+            <p style={{ margin: 0 }}>Esperando detección del sensor...</p>
+          </section>
+        )}
         <UploadImage onImageSelected={handleImageSelected} />
         <ControlsPanel
           personName={personName}
@@ -132,8 +215,18 @@ function App() {
           isLoading={isLoading}
           isStreaming={isStreaming}
           toggleStreaming={toggleStreaming}
+          onToggleLed={handleToggleLed}
+          ledState={ledState}
+          onRefreshDevices={handleRefreshDevices}
         />
-        <ResultsPanel currentResult={currentResult} history={history} systemMessage={systemMessage} />
+        <ResultsPanel
+          currentResult={currentResult}
+          history={history}
+          systemMessage={systemMessage}
+          motionDetected={motionDetected}
+          sensorDistance={sensorDistance}
+          devices={devices}
+        />
       </div>
     </main>
   );

@@ -7,6 +7,9 @@ interface ControlsPanelProps {
   isLoading: boolean;
   isStreaming: boolean;
   toggleStreaming: () => void;
+  onToggleLed: () => void;
+  ledState: boolean;
+  onRefreshDevices?: () => void;
 }
 
 export function ControlsPanel({
@@ -18,6 +21,9 @@ export function ControlsPanel({
   isLoading,
   isStreaming,
   toggleStreaming,
+  onToggleLed,
+  ledState,
+  onRefreshDevices,
 }: ControlsPanelProps) {
   return (
     <section className="card">
@@ -34,6 +40,14 @@ export function ControlsPanel({
       </label>
 
       <div className="actions">
+        {onRefreshDevices && (
+          <button onClick={onRefreshDevices}>
+            🔄 Refrescar ESPs
+          </button>
+        )}
+        <button onClick={onToggleLed} disabled={isLoading}>
+          {ledState ? 'Apagar LED 🔴' : 'Prender LED 🟢'}
+        </button>
         <button onClick={toggleStreaming} disabled={isLoading}>
           {isStreaming ? 'Detener tiempo real' : 'Iniciar tiempo real'}
         </button>

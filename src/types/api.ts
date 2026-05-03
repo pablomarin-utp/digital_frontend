@@ -32,3 +32,8 @@ export interface UiResult {
   message: string;
   timestamp: number;
 }
+
+export interface DevicesResponse {
+  bridge: string | null;
+  cam: string | null;
+}
