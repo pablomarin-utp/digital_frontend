@@ -5,12 +5,23 @@ import { EnrollModal } from './components/EnrollModal';
 import { ResultsPanel } from './components/ResultsPanel';
 import { UploadImage } from './components/UploadImage';
 import { faceApi, BACKEND_HEADERS } from './services/api';
+import { authApi } from './services/auth';
 import type { UiResult, DevicesResponse } from './types/api';
 
 const API_BASE_URL = 'https://sternum-untaxed-vigorous.ngrok-free.dev/api/v1';
 const USE_ESP32_CAM = import.meta.env.VITE_USE_ESP32_CAM === 'true';
 
 function App() {
+  // Auth state
+  const [usernameInput, setUsernameInput] = useState('');
+  const [passwordInput, setPasswordInput] = useState('');
+  const [loggedInUserId, setLoggedInUserId] = useState<string | null>(null);
+  const [authMessage, setAuthMessage] = useState('');
+
+  useEffect(() => {
+    const saved = localStorage.getItem('user_id');
+    if (saved) setLoggedInUserId(saved);
+  }, []);
   const [isStreaming, setIsStreaming] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [personName, setPersonName] = useState('');
@@ -32,6 +43,36 @@ function App() {
   const pushResult = useCallback((result: UiResult) => {
     setCurrentResult(result);
     setHistory((prev) => [result, ...prev].slice(0, 20));
+  }, []);
+
+  const handleRegister = useCallback(async () => {
+    try {
+      const res = await authApi.register(usernameInput, passwordInput);
+      setAuthMessage(res.message || 'Registrado');
+    } catch (e: any) {
+      setAuthMessage(String(e?.message ?? e));
+    }
+  }, [usernameInput, passwordInput]);
+
+  const handleLogin = useCallback(async () => {
+    try {
+      const res = await authApi.login(usernameInput, passwordInput);
+      if (res.success) {
+        setLoggedInUserId(res.user_id);
+        localStorage.setItem('user_id', res.user_id ?? '');
+        setAuthMessage('Conectado');
+      } else {
+        setAuthMessage(res.message || 'Credenciales inválidas');
+      }
+    } catch (e: any) {
+      setAuthMessage(String(e?.message ?? e));
+    }
+  }, [usernameInput, passwordInput]);
+
+  const handleLogout = useCallback(() => {
+    setLoggedInUserId(null);
+    localStorage.removeItem('user_id');
+    setAuthMessage('');
   }, []);
 
   // ── Polling principal: sensor, dispositivos y reconocimientos del servidor ──
@@ -255,6 +296,23 @@ function App() {
       <header>
         <h1>Face Recognition</h1>
       </header>
+
+      <div style={{ marginBottom: 12 }}>
+        {!loggedInUserId ? (
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <input placeholder="usuario" value={usernameInput} onChange={(e) => setUsernameInput(e.target.value)} />
+            <input placeholder="contraseña" type="password" value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)} />
+            <button onClick={handleRegister}>Registrar</button>
+            <button onClick={handleLogin}>Ingresar</button>
+            <span style={{ color: '#9db0d1' }}>{authMessage}</span>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <span style={{ color: '#9db0d1' }}>Usuario: {loggedInUserId}</span>
+            <button onClick={handleLogout}>Cerrar sesión</button>
+          </div>
+        )}
+      </div>
 
       <div className="grid">
         {motionDetected ? (
