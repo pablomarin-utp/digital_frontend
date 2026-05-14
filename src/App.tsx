@@ -4,10 +4,9 @@ import { ControlsPanel } from './components/ControlsPanel';
 import { EnrollModal } from './components/EnrollModal';
 import { ResultsPanel } from './components/ResultsPanel';
 import { UploadImage } from './components/UploadImage';
-import { faceApi, BACKEND_HEADERS } from './services/api';
+import { faceApi, API_BASE_URL } from './services/api';
 import type { UiResult, DevicesResponse } from './types/api';
 
-const API_BASE_URL = 'https://sternum-untaxed-vigorous.ngrok-free.dev/api/v1';
 const USE_ESP32_CAM = import.meta.env.VITE_USE_ESP32_CAM === 'true';
 
 function App() {
@@ -39,10 +38,10 @@ function App() {
     const interval = setInterval(async () => {
       try {
         const requests = [
-          fetch(`${API_BASE_URL}/esp/motion`, { headers: BACKEND_HEADERS }).catch(() => null),
-          fetch(`${API_BASE_URL}/esp/devices`, { headers: BACKEND_HEADERS }).catch(() => null),
+          fetch(`${API_BASE_URL}/esp/motion`).catch(() => null),
+          fetch(`${API_BASE_URL}/esp/devices`).catch(() => null),
           USE_ESP32_CAM
-            ? fetch(`${API_BASE_URL}/esp/recognitions`, { headers: BACKEND_HEADERS }).catch(() => null)
+            ? fetch(`${API_BASE_URL}/esp/recognitions`).catch(() => null)
             : Promise.resolve(null),
         ];
 
@@ -210,7 +209,6 @@ function App() {
     try {
       const res = await fetch(`${API_BASE_URL}/esp/led`, {
         method: 'POST',
-        headers: BACKEND_HEADERS,
       });
       const data = await res.json();
       setLedState(data.led);
@@ -224,7 +222,6 @@ function App() {
     try {
       const res = await fetch(`${API_BASE_URL}/esp/fan`, {
         method: 'POST',
-        headers: BACKEND_HEADERS,
       });
       const data = await res.json();
       setFanState(data.fan);
@@ -236,10 +233,10 @@ function App() {
 
   const handleRefreshDevices = useCallback(async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/esp/devices`, { headers: BACKEND_HEADERS });
+      const res = await fetch(`${API_BASE_URL}/esp/devices`);
       const text = await res.text();
       if (text.startsWith('<')) {
-        setSystemMessage('Error de proxy — verifica ngrok');
+        setSystemMessage('Error: el backend no respondió JSON');
       } else {
         const data: DevicesResponse = JSON.parse(text);
         setDevices(data);

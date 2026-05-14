@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { faceApi, BACKEND_HEADERS } from '../services/api';
+import { faceApi, API_BASE_URL } from '../services/api';
 
-const API_BASE_URL = 'https://sternum-untaxed-vigorous.ngrok-free.dev/api/v1';
 const CAPTURE_URL = `${API_BASE_URL}/esp/cam/capture`;
 
 interface EnrollModalProps {
@@ -27,7 +26,7 @@ export function EnrollModal({ onClose, onSuccess }: EnrollModalProps) {
 
     const fetchFrame = async () => {
       try {
-        const res = await fetch(CAPTURE_URL, { headers: BACKEND_HEADERS });
+        const res = await fetch(CAPTURE_URL);
         if (!res.ok) return;
         const blob = await res.blob();
         const url = URL.createObjectURL(blob);
@@ -53,7 +52,7 @@ export function EnrollModal({ onClose, onSuccess }: EnrollModalProps) {
   const handleCapture = async () => {
     setError('');
     try {
-      const res = await fetch(CAPTURE_URL, { headers: BACKEND_HEADERS });
+      const res = await fetch(CAPTURE_URL);
       if (!res.ok) throw new Error();
       const blob = await res.blob();
       setCapturedBlob(blob);
