@@ -32,6 +32,7 @@ export interface UiResult {
   message: string;
   timestamp: number;
   door?: boolean;
+  file?: string | null;
 }
 
 export interface EnrollResponse {
